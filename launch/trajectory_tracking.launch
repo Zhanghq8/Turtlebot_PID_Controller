@@ -1,0 +1,9 @@
+<launch>
+	<!-- Launch VICON -->
+	<!-- <include file="$(find vicon_bridge)/launch/vicon.launch"/> -->
+	<node pkg="turtlebot_pid" name="path_generator" type="path_generator" output="screen" />
+	<node pkg="turtlebot_pid" name="turtlebot_trajectory_tracking" type="trajectory_tracking_sim" output="screen" />
+	
+	
+
+</launch>

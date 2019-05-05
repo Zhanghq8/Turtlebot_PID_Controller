@@ -9,7 +9,6 @@ This Project include:
 2. Go to goal controller
 3. Trajectory tracking controller
 4. Path generator
-5. Performance plotting
   
 ## Read this first
 - Set up Turtlebot2 ROS package

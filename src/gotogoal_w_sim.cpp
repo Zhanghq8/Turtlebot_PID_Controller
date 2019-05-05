@@ -51,12 +51,7 @@ void GotoGoal_W_Sim::initPub()
 {
     ROS_INFO("Initializing Publishers");
     controlinput_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1, true); 
-}
-
-
-double GotoGoal_W_Sim::heading_angle(double x, double y)
-{
-    return atan2(x, y);
+    goalpos_pub_ = nh_.advertise<geometry_msgs::Pose2D>("/turtlebot/path", 1000, true);
 }
 
 void GotoGoal_W_Sim::currentposCallback(const nav_msgs::Odometry& odom) 
@@ -101,11 +96,12 @@ void GotoGoal_W_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     {
         w = -1.5;
     }
-    cout << "W input: " << w << endl;
 
     controlinput.angular.z = w;
     controlinput.linear.x = v;
-    controlinput_pub_.publish(controlinput); //output the square of the received value; 
+    controlinput_pub_.publish(controlinput); //output the square of the received value;
+    goalpos_pub_.publish(goalpos);
+    // ros::Duration(0.01).sleep(); 
 }
 
 void GotoGoal_W_Sim::stopCallback(const nav_msgs::Odometry& odom) 

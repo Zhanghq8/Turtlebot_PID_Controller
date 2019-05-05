@@ -60,13 +60,12 @@ private:
     ros::Subscriber currentpos_sub_;
     ros::Publisher controlinput_pub_;
 
-
     void initSub(); 
     void initPub();
 
     double heading_angle(double x, double y);
-    void setpidgains(double p=3.0, double i=0, double d=0);
-    void setvelocity(double x=0.5);
+    void setpidgains(double p=6.0, double i=0.01, double d=0.05);
+    void setvelocity(double x=0.3);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);
 
     void goalposCallback(const geometry_msgs::Pose2D& pos); 

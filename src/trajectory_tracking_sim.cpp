@@ -6,10 +6,7 @@ Trajectory_Tracking_Sim::Trajectory_Tracking_Sim(ros::NodeHandle* nodehandle):nh
     initSub(); // package up the messy work of creating subscribers; do this overhead in constructor
     initPub();
     setvelocity();
-    // setgoalpos();
     setpidgains();
-    // setcircularpath();
-
 }
 
 void Trajectory_Tracking_Sim::setpidgains(double p, double i, double d)
@@ -90,16 +87,15 @@ void Trajectory_Tracking_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     {
         w = 1.5;
     }
-    else if (w<-1.5)
+    else if ( w < -1.5)
     {
         w = -1.5;
     }
-    cout << w << endl;
 
     controlinput.angular.z = w;
     controlinput.linear.x = v;
     controlinput_pub_.publish(controlinput); //output the square of the received value; 
-    ros::Duration(0.1).sleep();
+    // ros::Duration(0.1).sleep();
 }
 
 int main(int argc, char** argv) 

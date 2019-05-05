@@ -37,8 +37,8 @@ private:
  
     void initPub();
 
-    void setcircularpath(double r=2.0, double re=0.2);
-    void setcircularcenter(double x=3.0, double y=2.0);
+    void setcircularpath(double r=2.0, double re=1.5);
+    void setcircularcenter(double x=3.0, double y=3.0);
 
     void path_pub(); 
 };

@@ -61,11 +61,11 @@ private:
     ros::Subscriber currentpos_sub_;
     ros::Subscriber stop_sub_;
     ros::Publisher controlinput_pub_;
+    ros::Publisher goalpos_pub_;
 
     void initSub(); 
     void initPub();
 
-    double heading_angle(double x, double y);
     void setgoalpos(double x=-3.0, double y=-3.0);
     void setpidgains(double p=5.0, double i=0.0, double d=0.5);
     void setvelocity(double x=0.5);

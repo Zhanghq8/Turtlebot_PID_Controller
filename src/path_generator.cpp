@@ -31,16 +31,6 @@ void Path_Generator::setcircularcenter(double x, double y)
     y_center = y;
 }
 
-
-// void Path_Generator::initSub()
-// {
-//     ROS_INFO("Initializing Subscribers");  
-//     currentpos_sub_ = nh_.subscribe("/odom", 1, &Path_Generator::currentposCallback,this);
-//     goalpos_sub_ = nh_.subscribe("/turtlebot/path", 1, &Path_Generator::goalposCallback,this); 
-//     // stop_sub_ = nh_.subscribe("/odom", 1, &Path_Generator::stopCallback,this);
-// }
-
-
 //member helper function to set up publishers;
 void Path_Generator::initPub()
 {
@@ -58,7 +48,7 @@ void Path_Generator::path_pub()
         pathpos.x = x_center + radius*cos(angle);
         pathpos.y = y_center + radius*sin(angle);
         path_pub_.publish(pathpos); //output the square of the received value; 
-        cout << "goal X: " << pathpos.x << ". goal Y: " << pathpos.y << "." << endl;
+        ROS_INFO("goal X, goal Y=%1.2f  %1.2f", pathpos.x, pathpos.y);
         if (abs(angle - 2*PI) <= 0.0001)
         {
             angle = 0;

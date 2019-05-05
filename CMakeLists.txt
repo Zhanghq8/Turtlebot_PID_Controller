@@ -201,9 +201,6 @@ include_directories(
 
 include_directories(include)
 
-add_executable(gotogoal_vw_sim src/gotogoal_vw_sim.cpp)
-target_link_libraries(gotogoal_vw_sim ${catkin_LIBRARIES})
-
 add_executable(gotogoal_w_sim src/gotogoal_w_sim.cpp)
 target_link_libraries(gotogoal_w_sim ${catkin_LIBRARIES})
 

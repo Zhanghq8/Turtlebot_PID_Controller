@@ -4,22 +4,24 @@ Trajectory_Tracking_Sim::Trajectory_Tracking_Sim(ros::NodeHandle* nodehandle):nh
 { // constructor
     ROS_INFO("In class constructor of Trajectory_Tracking_Sim");
     initSub(); // package up the messy work of creating subscribers; do this overhead in constructor
-    initPub();
-    setvelocity();
+    initPub();  
     setpidgains();
 }
 
-void Trajectory_Tracking_Sim::setpidgains(double p, double i, double d)
+void Trajectory_Tracking_Sim::setpidgains(double vp, double vi, double vd, double wp, double wi, double wd)
 {
-    k_p = p;
-    k_i = i;
-    k_d = d;
+    vk_p = vp;
+    vk_i = vi;
+    vk_d = vd;
+    wk_p = wp;
+    wk_i = wi;
+    wk_d = wd;
 }
 
-void Trajectory_Tracking_Sim::setvelocity(double x) 
-{
-    v = x;
-}
+// void Trajectory_Tracking_Sim::setvelocity(double x) 
+// {
+//     v = x;
+// }
 
 double Trajectory_Tracking_Sim::quatoeuler_yaw(const nav_msgs::Odometry& odom)
 {
@@ -34,8 +36,8 @@ double Trajectory_Tracking_Sim::quatoeuler_yaw(const nav_msgs::Odometry& odom)
 void Trajectory_Tracking_Sim::initSub()
 {
     ROS_INFO("Initializing Subscribers");  
-    currentpos_sub_ = nh_.subscribe("/odom", 1, &Trajectory_Tracking_Sim::currentposCallback,this);
-    goalpos_sub_ = nh_.subscribe("/turtlebot/path", 1, &Trajectory_Tracking_Sim::goalposCallback,this); 
+    currentpos_sub_ = nh_.subscribe("/odom", 1000, &Trajectory_Tracking_Sim::currentposCallback,this);
+    goalpos_sub_ = nh_.subscribe("/turtlebot/path", 1000, &Trajectory_Tracking_Sim::goalposCallback,this); 
 }
 
 
@@ -54,10 +56,14 @@ void Trajectory_Tracking_Sim::goalposCallback(const geometry_msgs::Pose2D& pos)
 
 void Trajectory_Tracking_Sim::currentposCallback(const nav_msgs::Odometry& odom) 
 {   
+
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;
+
     double theta = quatoeuler_yaw(odom);
 
+    ROS_INFO("goal X, goal Y=%1.2f  %1.2f", goalpos.x, goalpos.y);
+    ROS_INFO("current X, current Y=%1.2f  %1.2f", currentpos.x, currentpos.y);
     // distance between goal and robot in x-direction
     u_x = goalpos.x - currentpos.x;
     // distance between goal and robot in y-direction
@@ -66,22 +72,42 @@ void Trajectory_Tracking_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     double theta_g = atan2(u_y, u_x);
     // error between the goal angle and robot's angle
     u_angle = theta_g - theta;
-    e_k = atan2(sin(u_angle),cos(u_angle));
+
+    // ve_k = u_x;
+    ve_k = sqrt(pow(u_x, 2) + pow(u_y, 2));
+    we_k = atan2(sin(u_angle),cos(u_angle));
 
     // error for the proportional term
-    e_P = e_k;
+    ve_P = ve_k;
+    we_P = we_k;
+
     // error for the integral term. Approximate the integral using the accumulated error, obj.E_k, and the error for this time step
-    e_I = e_k + E_k;
+    ve_I = ve_k + vE_k;
+    we_I = we_k + wE_k;
 
     // cout << e_I << endl;
     // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
-    e_D = e_k - e_k_previous; 
+    ve_D = ve_k - ve_k_previous; 
+    we_D = we_k - we_k_previous; 
+
     // update errors
-    E_k = e_I;
-    e_k_previous = e_k;
+    vE_k = ve_I;
+    ve_k_previous = ve_k;
+    wE_k = we_I;
+    we_k_previous = we_k;
 
     // control input 
-    w = k_p*e_P + k_i*e_I + k_d*e_D;
+    v = vk_p*ve_P + vk_i*ve_I + vk_d*ve_D;
+    w = wk_p*we_P + wk_i*we_I + wk_d*we_D;
+
+    if (v > 0.4)
+    {
+        v = 0.4;
+    }
+    else if ( v < -0.4)
+    {
+        v = -0.4;
+    }
 
     if (w > 1.5)
     {
@@ -91,11 +117,11 @@ void Trajectory_Tracking_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     {
         w = -1.5;
     }
-
+    // cout << "##########" << v << endl;
     controlinput.angular.z = w;
     controlinput.linear.x = v;
+    ROS_INFO("W input=, V input=%1.2f %1.2f", w, v);
     controlinput_pub_.publish(controlinput); //output the square of the received value; 
-    // ros::Duration(0.1).sleep();
 }
 
 int main(int argc, char** argv) 

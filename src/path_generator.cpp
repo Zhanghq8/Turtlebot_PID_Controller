@@ -41,19 +41,21 @@ void Path_Generator::initPub()
 
 void Path_Generator::path_pub() 
 {   
-    // ros::Rate loop_rate(10);
+    ros::Rate loop_rate(10);
     while (ros::ok())
-    {
+    {   
         angle += PI *resolution/180;
         pathpos.x = x_center + radius*cos(angle);
         pathpos.y = y_center + radius*sin(angle);
         path_pub_.publish(pathpos); //output the square of the received value; 
-        ROS_INFO("goal X, goal Y=%1.2f  %1.2f", pathpos.x, pathpos.y);
+        
         if (abs(angle - 2*PI) <= 0.0001)
         {
             angle = 0;
         }
-        ros::Duration(0.1).sleep();
+        // ros::spinOnce();
+        loop_rate.sleep();
+        // ros::Duration(0.15).sleep();
     }
 
 }

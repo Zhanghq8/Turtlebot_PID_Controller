@@ -10,6 +10,7 @@
 
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/PoseArray.h>
 #include <nav_msgs/Odometry.h>
 #include "tf/transform_datatypes.h"
 
@@ -28,18 +29,24 @@ private:
 
 
     // control input for linear velocity
-    double v;
+    double v = 0;
     double w = 0;
 
     // pid gain parameters
-    double k_p;
-    double k_d;
-    double k_i;
+    double vk_p;
+    double vk_d;
+    double vk_i;
+    double wk_p;
+    double wk_d;
+    double wk_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double ve_P = 0;
+    double ve_I = 0;
+    double ve_D= 0;
+    double we_P = 0;
+    double we_I = 0;
+    double we_D= 0;
 
     double u_x = 0;
     double u_y = 0;
@@ -47,10 +54,13 @@ private:
     double u_angle = 0;
 
     // accumulated error
-    double E_k = 0;
-    double e_k;
+    double vE_k = 0;
+    double ve_k;
+    double wE_k = 0;
+    double we_k;
     // previous error
-    double e_k_previous = 0;
+    double ve_k_previous = 0;
+    double we_k_previous = 0;
 
     geometry_msgs::Pose2D currentpos, goalpos;
     geometry_msgs::Twist controlinput;
@@ -63,9 +73,8 @@ private:
     void initSub(); 
     void initPub();
 
-    double heading_angle(double x, double y);
-    void setpidgains(double p=6.0, double i=0.01, double d=0.05);
-    void setvelocity(double x=0.3);
+
+    void setpidgains(double vp=0.10, double vi=0.001, double vd=0.05, double wp=5.0, double wi=0.01, double wd=0.05);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);
 
     void goalposCallback(const geometry_msgs::Pose2D& pos); 

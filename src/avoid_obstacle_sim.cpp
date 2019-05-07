@@ -19,7 +19,7 @@ void Avoid_Obstacle_Sim::setpidgains(double p, double i, double d)
 
 void Avoid_Obstacle_Sim::setvelocity(double x) 
 {
-    v = x;
+    v_normal = x;
 }
 
 double Avoid_Obstacle_Sim::quatoeuler_yaw(const nav_msgs::Odometry& odom)
@@ -49,7 +49,7 @@ void Avoid_Obstacle_Sim::initPub()
 
 void Avoid_Obstacle_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
 {   
-    double laserdis[5];
+    cout << scan.range_min << endl;
     // laser_angle[0] = scan.angle_min;
     // laser_angle[4] = scan.angle_max;
     // laser_angle[1] = scan.angle_min+160.0/640*(scan.angle_max-scan.angle_min);
@@ -57,7 +57,7 @@ void Avoid_Obstacle_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
     // laser_angle[3] = scan.angle_min+480.0/640*(scan.angle_max-scan.angle_min);
     double laser_angle[5] = {-0.521568, -0.260107, 0.00135422, 0.262815, 0.524276};
 
-    int laser_index[5] = {0,159, 319, 479, 639};
+    int laser_index[5] = {0, 159, 319, 479, 639};
     for (int i=0; i<5; i++)
     {   
         if (scan.ranges[laser_index[i]] != scan.ranges[laser_index[i]])
@@ -76,67 +76,76 @@ void Avoid_Obstacle_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
         double y_or = laserdis[i]*sin(laser_angle[i]);
         obstacle_pos[i][0] = currentpos.x + cos(currentpos.theta)*x_or - sin(currentpos.theta)*y_or;
         obstacle_pos[i][1] = currentpos.y + sin(currentpos.theta)*x_or + cos(currentpos.theta)*y_or;
-        // cout << i << ": " << obstacle_pos[i][0] << " " << obstacle_pos[i][1] << " "; 
     }
-    // cout << "\n";
 }
 
 
 void Avoid_Obstacle_Sim::currentposCallback(const nav_msgs::Odometry& odom) 
 {   
-    currentpos.x = odom.pose.pose.position.x;
-    currentpos.y = odom.pose.pose.position.y;
-    currentpos.theta = quatoeuler_yaw(odom);
-
-    geometry_msgs::Pose2D u_ao;
-    u_ao.x = 0;
-    u_ao.y = 0;
-
-    for (int i=0; i<5; i++)
-    {   
-        // cout << i << ": " << obstacle_pos[i][0] << ", " << obstacle_pos[i][1] << " ";
-        u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
-        u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
-    }
-    // cout << "\n";
-    // cout << u_ao.x << " " << u_ao.y << endl;
-
-    // Compute the heading and error for the PID controller
-    double theta_ao = atan2(u_ao.y, u_ao.x);
-    
-    double e_theta = theta_ao - currentpos.theta;
-
-    // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
-    
-    e_k = atan2(sin(e_theta),cos(e_theta));
-
-    // error for the proportional term
-    e_P = e_k;
-    // error for the integral term. Approximate the integral using the accumulated error, obj.E_k, and the error for this time step
-    e_I = e_k + E_k;
-
-    // cout << e_I << endl;
-    // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
-    e_D = e_k - e_k_previous; 
-    // update errors
-    E_k = e_I;
-    e_k_previous = e_k;
-
-    // control input 
-    w = k_p*e_P + k_i*e_I + k_d*e_D;
-
-    if (w > 1.5)
+    if (laserdis[2] < 1.0)
     {
-        w = 1.5;
+        w = -0.8;
+        v_ao = 0.1;
+        controlinput.angular.z = w;
+        controlinput.linear.x = v_ao;
+        controlinput_pub_.publish(controlinput);
+
     }
-    else if (w < -1.5)
+    else
     {
-        w = -1.5;
+        currentpos.x = odom.pose.pose.position.x;
+        currentpos.y = odom.pose.pose.position.y;
+        currentpos.theta = quatoeuler_yaw(odom);
+
+        geometry_msgs::Pose2D u_ao;
+        u_ao.x = 0;
+        u_ao.y = 0;
+
+        for (int i=0; i<5; i++)
+        {   
+            u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
+            u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
+        }
+
+        // Compute the heading and error for the PID controller
+        double theta_ao = atan2(u_ao.y, u_ao.x);
+        
+        double e_theta = theta_ao - currentpos.theta;
+        cout << currentpos.theta-theta_ao << endl;
+
+        // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
+        
+        e_k = atan2(sin(e_theta),cos(e_theta));
+
+        // error for the proportional term
+        e_P = e_k;
+        // error for the integral term. Approximate the integral using the accumulated error, obj.E_k, and the error for this time step
+        e_I = e_k + E_k;
+
+        // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
+        e_D = e_k - e_k_previous; 
+        // update errors
+        E_k = e_I;
+        e_k_previous = e_k;
+
+        // control input 
+        w = k_p*e_P + k_i*e_I + k_d*e_D;
+
+        if (w > 1.5)
+        {
+            w = 1.5;
+        }
+        else if (w < -1.5)
+        {
+            w = -1.5;
+        }
+        controlinput.angular.z = w;
+        controlinput.linear.x = v_normal;
+        controlinput_pub_.publish(controlinput); // 
     }
+
     cout << "w: " << w << endl;
-    controlinput.angular.z = w;
-    controlinput.linear.x = v;
-    controlinput_pub_.publish(controlinput); //output the square of the received value;
+ 
 }
 
 

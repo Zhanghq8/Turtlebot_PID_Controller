@@ -29,7 +29,8 @@ private:
 
 
     // control input for linear velocity
-    double v;
+    double v_normal;
+    double v_ao;
     double w = 0;
     // double theta_d = 0.5;
 
@@ -55,8 +56,9 @@ private:
     double e_k_previous = 0;
 
     //obstacle pos
+    double laserdis[5];
     double obstacle_pos[5][2];
-    double lasergain[5] = {1.3, 1, 1, 1, 1};
+    double lasergain[5] = {1, 1, 1, 1, 1};
 
     geometry_msgs::Pose2D currentpos;
     geometry_msgs::Twist controlinput;

@@ -58,7 +58,7 @@ void GotoGoal_W_Sim::currentposCallback(const nav_msgs::Odometry& odom)
 {   
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;
-    double theta = quatoeuler_yaw(odom);
+    currentpos.theta = quatoeuler_yaw(odom);
 
     // distance between goal and robot in x-direction
     u_x = goalpos.x - currentpos.x;
@@ -67,9 +67,9 @@ void GotoGoal_W_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     // angle from robot to goal
     double theta_g = atan2(u_y, u_x);
     // error between the goal angle and robot's angle
-    u_angle = theta_g - theta;
+    u_angle = theta_g - currentpos.theta;
 
-    cout << "theta_g: " << theta_g << " theta: " << theta << endl;
+    cout << "theta_g: " << theta_g << " theta: " << currentpos.theta << endl;
 
     e_k = atan2(sin(u_angle),cos(u_angle));
 

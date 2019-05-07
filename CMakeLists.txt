@@ -204,6 +204,9 @@ include_directories(include)
 add_executable(gotogoal_w_sim src/gotogoal_w_sim.cpp)
 target_link_libraries(gotogoal_w_sim ${catkin_LIBRARIES})
 
+add_executable(avoid_obstacle_sim src/avoid_obstacle_sim.cpp)
+target_link_libraries(avoid_obstacle_sim ${catkin_LIBRARIES})
+
 add_executable(gotoangle_sim src/gotoangle_sim.cpp)
 target_link_libraries(gotoangle_sim ${catkin_LIBRARIES})
 

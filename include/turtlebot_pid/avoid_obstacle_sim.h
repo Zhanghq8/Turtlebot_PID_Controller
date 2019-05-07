@@ -56,32 +56,26 @@ private:
 
     //obstacle pos
     double obstacle_pos[5][2];
-    double lasergain[5] = {0.1, 0.1, 0.1, 0.1, 0.1};
+    double lasergain[5] = {1.3, 1, 1, 1, 1};
 
-    geometry_msgs::Pose2D currentpos, goalpos, u_ao;
+    geometry_msgs::Pose2D currentpos;
     geometry_msgs::Twist controlinput;
 
     ros::NodeHandle nh_;
-    // ros::Subscriber goalpos_sub_;
     ros::Subscriber currentpos_sub_;
-    ros::Subscriber stop_sub_;
     ros::Subscriber laserpos_sub_;
     ros::Publisher controlinput_pub_;
-    ros::Publisher goalpos_pub_;
 
     void initSub(); 
     void initPub();
 
-    void setgoalpos(double x=-3.0, double y=-3.0);
-    void setpidgains(double p=1.0, double i=0.0, double d=0.05);
-    void setvelocity(double x=0.5);
+    void setpidgains(double p=5.0, double i=0.0, double d=0.05);
+    void setvelocity(double x=0.3);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);
     
 
     void currentposCallback(const nav_msgs::Odometry& odom);
     void laserCallback(const sensor_msgs::LaserScan& scan);
-    //stop turtlebot when the goal is reached 
-    void stopCallback(const nav_msgs::Odometry& odom);
 
 
 };

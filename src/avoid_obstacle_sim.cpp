@@ -6,7 +6,6 @@ Avoid_Obstacle_Sim::Avoid_Obstacle_Sim(ros::NodeHandle* nodehandle):nh_(*nodehan
     initSub(); // package up the messy work of creating subscribers; do this overhead in constructor
     initPub();
     setvelocity();
-    setgoalpos();
     setpidgains();
 
 }
@@ -23,12 +22,6 @@ void Avoid_Obstacle_Sim::setvelocity(double x)
     v = x;
 }
 
-void Avoid_Obstacle_Sim::setgoalpos(double x, double y)
-{
-    goalpos.x = x;
-    goalpos.y = y;
-}
-
 double Avoid_Obstacle_Sim::quatoeuler_yaw(const nav_msgs::Odometry& odom)
 {
     tf::Quaternion qua(odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w);
@@ -41,9 +34,8 @@ double Avoid_Obstacle_Sim::quatoeuler_yaw(const nav_msgs::Odometry& odom)
 void Avoid_Obstacle_Sim::initSub()
 {
     ROS_INFO("Initializing Subscribers");  
-    currentpos_sub_ = nh_.subscribe("/odom", 1, &Avoid_Obstacle_Sim::currentposCallback,this);
     laserpos_sub_ =  nh_.subscribe("/scan", 1, &Avoid_Obstacle_Sim::laserCallback,this);
-    // stop_sub_ = nh_.subscribe("/odom", 1, &Avoid_Obstacle_Sim::stopCallback,this);
+    currentpos_sub_ = nh_.subscribe("/odom", 1, &Avoid_Obstacle_Sim::currentposCallback,this);
 }
 
 
@@ -52,7 +44,6 @@ void Avoid_Obstacle_Sim::initPub()
 {
     ROS_INFO("Initializing Publishers");
     controlinput_pub_ = nh_.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop", 1, true); 
-    goalpos_pub_ = nh_.advertise<geometry_msgs::Pose2D>("/turtlebot/path", 1000, true);
 }
 
 
@@ -85,7 +76,9 @@ void Avoid_Obstacle_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
         double y_or = laserdis[i]*sin(laser_angle[i]);
         obstacle_pos[i][0] = currentpos.x + cos(currentpos.theta)*x_or - sin(currentpos.theta)*y_or;
         obstacle_pos[i][1] = currentpos.y + sin(currentpos.theta)*x_or + cos(currentpos.theta)*y_or;
+        // cout << i << ": " << obstacle_pos[i][0] << " " << obstacle_pos[i][1] << " "; 
     }
+    // cout << "\n";
 }
 
 
@@ -113,6 +106,8 @@ void Avoid_Obstacle_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     
     double e_theta = theta_ao - currentpos.theta;
 
+    // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
+    
     e_k = atan2(sin(e_theta),cos(e_theta));
 
     // error for the proportional term
@@ -142,25 +137,8 @@ void Avoid_Obstacle_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     controlinput.angular.z = w;
     controlinput.linear.x = v;
     controlinput_pub_.publish(controlinput); //output the square of the received value;
-    // goalpos_pub_.publish(goalpos);
-    // ros::Duration(0.01).sleep(); 
 }
 
-void Avoid_Obstacle_Sim::stopCallback(const nav_msgs::Odometry& odom) 
-{   
-    currentpos.x = odom.pose.pose.position.x;
-    currentpos.y = odom.pose.pose.position.y;
-    double theta = quatoeuler_yaw(odom);
-    cout << "Xc pose: " << currentpos.x << " Xg pose: " << goalpos.x << " Yc pose: " << currentpos.y << " Yg pose: "<< goalpos.y <<endl;
-    if ( ( abs(currentpos.x - goalpos.x)<0.05 ) && ( abs(currentpos.y - goalpos.y)<0.05 ) && (currentpos.x * goalpos.x > 0.01))
-    {   
-        controlinput.angular.z = 0;
-        controlinput.linear.x = 0;
-        controlinput_pub_.publish(controlinput);
-        ROS_INFO("Finished...");
-        ros::shutdown();
-    }
-}
 
 int main(int argc, char** argv) 
 {

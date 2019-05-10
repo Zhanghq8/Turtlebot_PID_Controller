@@ -10,6 +10,7 @@ This Project include:
 3. Trajectory tracking controller
 4. Path generator
 5. Avoid obstacle controller
+6. Go to goal while avoiding obstacle controller
   
 ## Read this first
 - Set up Turtlebot2 ROS package

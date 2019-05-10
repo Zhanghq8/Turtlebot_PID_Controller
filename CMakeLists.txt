@@ -207,6 +207,12 @@ target_link_libraries(gotogoal_w_sim ${catkin_LIBRARIES})
 add_executable(avoid_obstacle_sim src/avoid_obstacle_sim.cpp)
 target_link_libraries(avoid_obstacle_sim ${catkin_LIBRARIES})
 
+add_executable(GTG_AO_switch_sim src/GTG_AO_switch_sim.cpp)
+target_link_libraries(GTG_AO_switch_sim ${catkin_LIBRARIES})
+
+add_executable(GTG_AO_blending_sim src/GTG_AO_blending_sim.cpp)
+target_link_libraries(GTG_AO_blending_sim ${catkin_LIBRARIES})
+
 add_executable(gotoangle_sim src/gotoangle_sim.cpp)
 target_link_libraries(gotoangle_sim ${catkin_LIBRARIES})
 

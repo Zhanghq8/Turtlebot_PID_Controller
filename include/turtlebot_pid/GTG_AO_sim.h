@@ -50,7 +50,7 @@ private:
     double e_k_previous = 0;
 
     //blending parameter
-    double alpha = 0.75;
+    double alpha = 0.90;
 
     //obstacle pos
     double laserdis[5];
@@ -70,7 +70,7 @@ private:
     void initSub(); 
     void initPub();
 
-    void setgoalpos(double x=-2.0, double y=3.5);
+    void setgoalpos(double x=4.0, double y=-4.0);
     void setpidgains(double p=5.0, double i=0.0, double d=0.05);
     void setvelocity(double x=0.3);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);

@@ -38,4 +38,5 @@ Note: If everything works, you could see the following environment, and you coul
 
 ## Demo
 - Gotogoal controller demo(https://youtu.be/xyt6erl5iEk)
-- Avoid obstacle controller demo(https://youtu.be/bHeEsdVzJBI)   
+- Avoid obstacle controller demo(https://youtu.be/bHeEsdVzJBI) 
+- Gotogoal while avoid obstacle controller demo(https://youtu.be/G8c3fivk26k)  

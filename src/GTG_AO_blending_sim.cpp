@@ -89,7 +89,15 @@ void GTG_AO_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
 
 void GTG_AO_Sim::currentposCallback(const nav_msgs::Odometry& odom) 
 {   
-    if (laserdis[2] < 1.0)
+    if (laserdis[3] < 0.8)
+    {
+        w = 0.8;
+        v_ao = 0.1;
+        controlinput.angular.z = w;
+        controlinput.linear.x = v_ao;
+        controlinput_pub_.publish(controlinput);
+    }
+    else if (laserdis[1] < 0.8)
     {
         w = -0.8;
         v_ao = 0.1;
@@ -97,6 +105,7 @@ void GTG_AO_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         controlinput.linear.x = v_ao;
         controlinput_pub_.publish(controlinput);
     }
+
     else
     {
         currentpos.x = odom.pose.pose.position.x;

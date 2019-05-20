@@ -1,8 +1,8 @@
 <launch>
 	<!-- Launch VICON -->
 	<!-- <include file="$(find vicon_bridge)/launch/vicon.launch"/> -->
-	<node pkg="turtlebot_pid" name="turtlebot_ao_gtg_blending" type="GTG_AO_blending_sim" output="screen" />
-	<!-- <node pkg="turtlebot_pid" name="turtlebot_ao_gtg_switch" type="GTG_AO_switch_sim" output="screen" /> -->
+	<!-- <node pkg="turtlebot_pid" name="turtlebot_ao_gtg_blending" type="GTG_AO_blending_sim" output="screen" /> -->
+	<node pkg="turtlebot_pid" name="turtlebot_ao_gtg_switch" type="GTG_AO_switch_sim" output="screen" />
 	
 
 </launch>

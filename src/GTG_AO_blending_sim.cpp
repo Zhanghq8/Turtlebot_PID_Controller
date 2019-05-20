@@ -18,9 +18,10 @@ void GTG_AO_Sim::setpidgains(double p, double i, double d)
     k_d = d;
 }
 
-void GTG_AO_Sim::setvelocity(double x) 
+void GTG_AO_Sim::setvelocity(double x, double y) 
 {
     v_normal = x;
+    v_ao = y;
 }
 
 void GTG_AO_Sim::setgoalpos(double x, double y)
@@ -67,15 +68,22 @@ void GTG_AO_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
     int laser_index[5] = {0, 159, 319, 479, 639};
     for (int i=0; i<5; i++)
     {   
-        if (scan.ranges[laser_index[i]] != scan.ranges[laser_index[i]])
-        {
-            laserdis[i] = scan.range_max;
-        }
-        else
+        if (scan.ranges[laser_index[i]] == scan.ranges[laser_index[i]] && scan.ranges[laser_index[i]] > 1.0)
         {
             laserdis[i] = scan.ranges[laser_index[i]];
         }
+
+        else if (scan.ranges[laser_index[i]] - 1.0 <= 0)
+        {
+            laserdis[i] = scan.range_min;
+        }
+        else 
+        {
+            laserdis[i] = scan.range_max;
+        }
+        // cout << "Laser: " << i << ": " << laserdis[i] << " . ";
     }
+    // cout << " \n";
     
     for (int i=0; i<5; i++)
     {   
@@ -89,102 +97,128 @@ void GTG_AO_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
 
 void GTG_AO_Sim::currentposCallback(const nav_msgs::Odometry& odom) 
 {   
-    if (laserdis[3] < 0.8)
+    double min_laserdis = laserdis[0];
+    int sensor_index = -1;
+    for (int i=1; i<5; i++) 
     {
-        w = 0.8;
-        v_ao = 0.1;
-        controlinput.angular.z = w;
-        controlinput.linear.x = v_ao;
-        controlinput_pub_.publish(controlinput);
+        if (laserdis[i] < min_laserdis) {
+            min_laserdis = laserdis[i];
+        }
     }
-    else if (laserdis[1] < 0.8)
-    {
-        w = -0.8;
-        v_ao = 0.1;
-        controlinput.angular.z = w;
-        controlinput.linear.x = v_ao;
-        controlinput_pub_.publish(controlinput);
+    // cout << min_laserdis << " min" << endl;
+    // if (min_laserdis < 0.90 && (laserdis[0] < 0.90 || laserdis[1] < 0.90 || laserdis[2] < 0.90))
+    // {   
+    //     cout << "Turn left!!" << endl;
+    //     w = 0.8;
+    //     v_ao = 0.15;
+    //     controlinput.angular.z = w;
+    //     controlinput.linear.x = v_ao;
+    //     controlinput_pub_.publish(controlinput);
+    // }
+    // else if (min_laserdis < 0.90 && (laserdis[3] < 0.90 || laserdis[4] < 0.90))
+    // {   
+    //     cout << "Turn right!!" << endl;
+    //     w = -0.8;
+    //     v_ao = 0.15;
+    //     controlinput.angular.z = w;
+    //     controlinput.linear.x = v_ao;
+    //     controlinput_pub_.publish(controlinput);
+    // }
+
+    // else if (min_laserdis >= 0.90)
+    // {
+    cout << "Controller!!" << endl;
+    currentpos.x = odom.pose.pose.position.x;
+    currentpos.y = odom.pose.pose.position.y;
+    currentpos.theta = quatoeuler_yaw(odom);
+
+    //avoid obstacle vector, go to goal vector
+    //normalized avoid obstacle vector, go to goal vector
+    //blending vector combine gotogoal and avoid obstacle
+    geometry_msgs::Pose2D u_ao, u_gtg, u_ao_n, u_gtg_n, u_ao_gtg;
+    u_ao.x = 0;
+    u_ao.y = 0;
+    u_ao.theta = 0;
+
+    u_gtg.x = 0;
+    u_gtg.y = 0;
+    u_gtg.theta = 0;
+
+    // distance between goal and robot in x-direction
+    u_gtg.x = goalpos.x - currentpos.x;
+    // distance between goal and robot in y-direction
+    u_gtg.y = goalpos.y - currentpos.y;
+
+    //normalization
+    u_gtg_n.x = u_gtg.x/ (sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2)));
+    u_gtg_n.y = u_gtg.y/ (sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2)));
+
+    for (int i=0; i<5; i++)
+    {   
+        u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
+        u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
     }
 
-    else
-    {
-        currentpos.x = odom.pose.pose.position.x;
-        currentpos.y = odom.pose.pose.position.y;
-        currentpos.theta = quatoeuler_yaw(odom);
+    //normalization
+    u_ao_n.x = u_ao.x/ (sqrt(pow(u_ao.x, 2)+pow(u_ao.y, 2)));
+    u_ao_n.y = u_ao.y/ (sqrt(pow(u_ao.x, 2)+pow(u_ao.y, 2)));
 
-        //avoid obstacle vector, go to goal vector
-        //normalized avoid obstacle vector, go to goal vector
-        //blending vector combine gotogoal and avoid obstacle
-        geometry_msgs::Pose2D u_ao, u_gtg, u_ao_n, u_gtg_n, u_ao_gtg;
-        u_ao.x = 0;
-        u_ao.y = 0;
-        u_ao.theta = 0;
+    //blending vector
+    u_ao_gtg.x = u_ao_n.x*alpha + u_gtg_n.x*(1-alpha);
+    u_ao_gtg.y = u_ao_n.y*alpha + u_gtg_n.y*(1-alpha);
 
-        u_gtg.x = 0;
-        u_gtg.y = 0;
-        u_gtg.theta = 0;
+    // cout << "gotogoal: " << u_gtg_n.x << ", " << u_gtg_n.y << endl;
+    // cout << "AO: " << u_ao_n.x << ", " << u_ao_n.y << endl;
 
-        // distance between goal and robot in x-direction
-        u_gtg.x = goalpos.x - currentpos.x;
-        // distance between goal and robot in y-direction
-        u_gtg.y = goalpos.y - currentpos.y;
+    u_ao_gtg.theta = atan2(u_ao_gtg.y, u_ao_gtg.x);
+    
+    double e_theta = u_ao_gtg.theta - currentpos.theta;
+    // cout << currentpos.theta-theta_ao << endl;
 
-        //normalization
-        u_gtg_n.x = u_gtg.x/ (sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2)));
-        u_gtg_n.y = u_gtg.y/ (sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2)));
+    // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
+    
+    e_k = atan2(sin(e_theta),cos(e_theta));
 
-        for (int i=0; i<5; i++)
-        {   
-            u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
-            u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
-        }
+    // error for the proportional term
+    e_P = e_k;
+    // error for the integral term. Approximate the integral using the accumulated error, E_k, and the error for this time step
+    e_I = e_k + E_k;
 
-        //normalization
-        u_ao_n.x = u_ao.x/ (sqrt(pow(u_ao.x, 2)+pow(u_ao.y, 2)));
-        u_ao_n.y = u_ao.y/ (sqrt(pow(u_ao.x, 2)+pow(u_ao.y, 2)));
+    // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
+    e_D = e_k - e_k_previous; 
+    // update errors
+    E_k = e_I;
+    e_k_previous = e_k;
 
-        //blending vector
-        u_ao_gtg.x = u_ao_n.x*alpha + u_gtg_n.x*(1-alpha);
-        u_ao_gtg.y = u_ao_n.y*alpha + u_gtg_n.y*(1-alpha);
+    // control input 
+    w = k_p*e_P + k_i*e_I + k_d*e_D;
 
-        u_ao_gtg.theta = atan2(u_ao_gtg.y, u_ao_gtg.x);
-        
-        double e_theta = u_ao_gtg.theta - currentpos.theta;
-        // cout << currentpos.theta-theta_ao << endl;
 
-        // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
-        
-        e_k = atan2(sin(e_theta),cos(e_theta));
-
-        // error for the proportional term
-        e_P = e_k;
-        // error for the integral term. Approximate the integral using the accumulated error, E_k, and the error for this time step
-        e_I = e_k + E_k;
-
-        // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
-        e_D = e_k - e_k_previous; 
-        // update errors
-        E_k = e_I;
-        e_k_previous = e_k;
-
-        // control input 
-        w = k_p*e_P + k_i*e_I + k_d*e_D;
-
-        if (w > 1.5)
+    if (min_laserdis < 1.5) {
+        if (w > 0.9)
         {
-            w = 1.5;
+            w = 0.9;
         }
-        else if (w < -1.5)
+        else if (w < -0.9)
         {
-            w = -1.5;
+            w = -0.9;
         }
+        controlinput.linear.x = v_ao;
         controlinput.angular.z = w;
+    }
+    else {
         controlinput.linear.x = v_normal;
-        controlinput_pub_.publish(controlinput); // 
+        if (w > 1.0)
+        {
+            w = 1.0;
+        }
+        else if (w < -1.0)
+        {
+            w = -1.0;
+        }
+        controlinput.angular.z = w;
     }
-
-    cout << "w: " << w << endl;
- 
+    controlinput_pub_.publish(controlinput); // 
 }
 
 void GTG_AO_Sim::stopCallback(const nav_msgs::Odometry& odom) 
@@ -192,7 +226,7 @@ void GTG_AO_Sim::stopCallback(const nav_msgs::Odometry& odom)
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;
     double theta = quatoeuler_yaw(odom);
-    cout << "Xc pose: " << currentpos.x << " Xg pose: " << goalpos.x << " Yc pose: " << currentpos.y << " Yg pose: "<< goalpos.y <<endl;
+    // cout << "Xc pose: " << currentpos.x << " Xg pose: " << goalpos.x << " Yc pose: " << currentpos.y << " Yg pose: "<< goalpos.y <<endl;
     if ( ( abs(currentpos.x - goalpos.x)<0.1 ) && ( abs(currentpos.y - goalpos.y)<0.1 ) && (currentpos.x * goalpos.x > 0.01))
     {   
         controlinput.angular.z = 0;

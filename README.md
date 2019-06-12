@@ -11,6 +11,7 @@ This Project include:
 4. Path generator
 5. Avoid obstacle controller
 6. Go to goal while avoiding obstacle controller
+7. Follow wall controller
   
 ## Read this first
 - Set up Turtlebot2 ROS package
@@ -40,3 +41,4 @@ Note: If everything works, you could see the following environment, and you coul
 - Gotogoal controller demo(https://youtu.be/xyt6erl5iEk)
 - Avoid obstacle controller demo(https://youtu.be/bHeEsdVzJBI) 
 - Gotogoal while avoid obstacle controller demo(https://youtu.be/G8c3fivk26k)  
+- Follow wall controller demo(https://youtu.be/IsQj1Lg268I)

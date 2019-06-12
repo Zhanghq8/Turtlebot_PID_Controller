@@ -210,6 +210,9 @@ target_link_libraries(avoid_obstacle_sim ${catkin_LIBRARIES})
 add_executable(GTG_AO_switch_sim src/GTG_AO_switch_sim.cpp)
 target_link_libraries(GTG_AO_switch_sim ${catkin_LIBRARIES})
 
+add_executable(follow_wall_sim src/follow_wall_sim.cpp)
+target_link_libraries(follow_wall_sim ${catkin_LIBRARIES})
+
 add_executable(GTG_AO_blending_sim src/GTG_AO_blending_sim.cpp)
 target_link_libraries(GTG_AO_blending_sim ${catkin_LIBRARIES})
 

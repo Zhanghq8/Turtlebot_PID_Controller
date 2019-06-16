@@ -108,7 +108,7 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     currentpos.y = odom.pose.pose.position.y;
     currentpos.theta = quatoeuler_yaw(odom);
 
-    geometry_msgs::Pose2D u_gtg, u_ao, u_fw_c, u_fw_cc;
+    geometry_msgs::Pose2D u_gtg, u_ao;
 
     // Go to goal vector
     u_gtg.x = goalpos.x - currentpos.x;
@@ -143,8 +143,8 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     
     geometry_msgs::Pose2D u_fw_c_p, u_fw_c_p_norm;
     // ufw_p: vector points from the robot to the closest point on ufw
-    u_fw_c_p.x = (u_avoid.x - currentpos.x) - ((u_avoid.x - currentpos.x)*u_fw_c_t_norm.x)*u_fw_c_t_norm.x;
-    u_fw_c_p.y = (u_avoid.y - currentpos.y) - ((u_avoid.y - currentpos.y)*u_fw_c_t_norm.y)*u_fw_c_t_norm.y;
+    u_fw_c_p.x = (u_c_avoid.x - currentpos.x) - ((u_c_avoid.x - currentpos.x)*u_fw_c_t_norm.x)*u_fw_c_t_norm.x;
+    u_fw_c_p.y = (u_c_avoid.y - currentpos.y) - ((u_c_avoid.y - currentpos.y)*u_fw_c_t_norm.y)*u_fw_c_t_norm.y;
 
     // calculate the norm of u_fw_cp vector;
     u_fw_c_p_norm.x = u_fw_c_p.x/ (sqrt(pow(u_fw_c_p.x, 2)+pow(u_fw_c_p.y, 2)) + 0.0001);
@@ -175,8 +175,8 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     
     geometry_msgs::Pose2D u_fw_cc_p, u_fw_cc_p_norm;
     // ufw_p: vector points from the robot to the closest point on ufw
-    u_fw_cc_p.x = (u_avoid.x - currentpos.x) - ((u_avoid.x - currentpos.x)*u_fw_cc_t_norm.x)*u_fw_cc_t_norm.x;
-    u_fw_cc_p.y = (u_avoid.y - currentpos.y) - ((u_avoid.y - currentpos.y)*u_fw_cc_t_norm.y)*u_fw_cc_t_norm.y;
+    u_fw_cc_p.x = (u_cc_avoid.x - currentpos.x) - ((u_cc_avoid.x - currentpos.x)*u_fw_cc_t_norm.x)*u_fw_cc_t_norm.x;
+    u_fw_cc_p.y = (u_cc_avoid.y - currentpos.y) - ((u_cc_avoid.y - currentpos.y)*u_fw_cc_t_norm.y)*u_fw_cc_t_norm.y;
 
     // calculate the norm of u_fw_ccp vector;
     u_fw_cc_p_norm.x = u_fw_cc_p.x/ (sqrt(pow(u_fw_cc_p.x, 2)+pow(u_fw_cc_p.y, 2)) + 0.0001);
@@ -207,7 +207,7 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         count += 0.00001;
     }
 
-    else if (min_laserdis = diswall && u_gtg.x * u_fw_cc.x + u_gtg.y * u_fw_cc.y > 0) 
+    else if (abs(min_laserdis - diswall) <= 0.05 && u_gtg.x * u_fw_cc.x + u_gtg.y * u_fw_cc.y > 0) 
     {
         if (count == 0) {
             distance_gtg_fw = sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2));
@@ -275,7 +275,7 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     controlinput_pub_.publish(controlinput);
 }
 
-void GotoGoal_W_Sim::stopCallback(const nav_msgs::Odometry& odom) 
+void Navigate_Sim::stopCallback(const nav_msgs::Odometry& odom) 
 {   
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;

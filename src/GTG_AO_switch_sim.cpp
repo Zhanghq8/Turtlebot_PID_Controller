@@ -103,7 +103,7 @@ void GTG_AO_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     currentpos.theta = quatoeuler_yaw(odom);
 
     double min_laserdis = laserdis[0];
-    // int sensor_index = -1;
+
     for (int i=1; i<5; i++) 
     {
         if (laserdis[i] < min_laserdis) {
@@ -165,55 +165,50 @@ void GTG_AO_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     {   
         cout << "Aovid obstacle..." << endl;
 
-        // if
-        // {
+        geometry_msgs::Pose2D u_ao;
+        u_ao.x = 0;
+        u_ao.y = 0;
 
-            geometry_msgs::Pose2D u_ao;
-            u_ao.x = 0;
-            u_ao.y = 0;
+        for (int i=0; i<5; i++)
+        {   
+            u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
+            u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
+        }
 
-            for (int i=0; i<5; i++)
-            {   
-                u_ao.x += (obstacle_pos[i][0] - currentpos.x) * lasergain[i];
-                u_ao.y += (obstacle_pos[i][1] - currentpos.y) * lasergain[i];
-            }
+        // Compute the heading and error for the PID controller
+        double theta_ao = atan2(u_ao.y, u_ao.x);
+        
+        double e_theta = theta_ao - currentpos.theta;
+        // cout << currentpos.theta-theta_ao << endl;
 
-            // Compute the heading and error for the PID controller
-            double theta_ao = atan2(u_ao.y, u_ao.x);
-            
-            double e_theta = theta_ao - currentpos.theta;
-            // cout << currentpos.theta-theta_ao << endl;
+        // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
+        
+        e_k = atan2(sin(e_theta),cos(e_theta));
 
-            // cout << "Theta: " << theta_ao << ", " << currentpos.theta << " \n";
-            
-            e_k = atan2(sin(e_theta),cos(e_theta));
+        // error for the proportional term
+        e_P = e_k;
+        // error for the integral term. Approximate the integral using the accumulated error, obj.E_k, and the error for this time step
+        e_I = e_k + E_k;
 
-            // error for the proportional term
-            e_P = e_k;
-            // error for the integral term. Approximate the integral using the accumulated error, obj.E_k, and the error for this time step
-            e_I = e_k + E_k;
+        // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
+        e_D = e_k - e_k_previous; 
+        // update errors
+        E_k = e_I;
+        e_k_previous = e_k;
 
-            // error for the derivative term. Hint: Approximate the derivative using the previous error, and the error for this time step, e_k.
-            e_D = e_k - e_k_previous; 
-            // update errors
-            E_k = e_I;
-            e_k_previous = e_k;
+        // control input 
+        w = k_p*e_P + k_i*e_I + k_d*e_D;
 
-            // control input 
-            w = k_p*e_P + k_i*e_I + k_d*e_D;
-
-            if (w > 0.8)
-            {
-                w = 0.8;
-            }
-            else if (w < -0.8)
-            {
-                w = -0.8;
-            }
-            controlinput.angular.z = w;
-            controlinput.linear.x = v_ao;
-            controlinput_pub_.publish(controlinput); // 
-        // }
+        if (w > 0.8)
+        {
+            w = 0.8;
+        }
+        else if (w < -0.8)
+        {
+            w = -0.8;
+        }
+        controlinput.angular.z = w;
+        controlinput.linear.x = v_ao;
     }
 
     cout << "w: " << w << endl;

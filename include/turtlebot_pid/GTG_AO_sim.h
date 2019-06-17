@@ -70,7 +70,7 @@ private:
     void initSub(); 
     void initPub();
 
-    void setgoalpos(double x=-4.0, double y=1.0);
+    void setgoalpos(double x=-5.0, double y=-3.0);
     void setpidgains(double p=3.0, double i=0.0, double d=0.05);
     void setvelocity(double x=0.2, double y=0.05);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);

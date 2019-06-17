@@ -73,7 +73,7 @@ private:
 
     void setpidgains(double p=3.0, double i=0.0, double d=0.01);
     void setvelocity(double x=0.3, double y=0.05);
-    void setdirection(int x=-1);
+    void setdirection(int x=-1);//-1:clockwise; 1:counter-clockwise
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);
     
 

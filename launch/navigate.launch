@@ -1,6 +1,6 @@
 <launch>
 	<!-- Launch VICON -->
 	<!-- <include file="$(find vicon_bridge)/launch/vicon.launch"/> -->
-	<node pkg="turtlebot_pid" name="turtlebot_followwall" type="follow_wall_sim" output="screen" />
+	<node pkg="turtlebot_pid" name="turtlebot_navigate" type="navigate_sim" output="screen" />
 
 </launch>

@@ -41,4 +41,4 @@ Note: If everything works, you could see the following environment, and you coul
 - Gotogoal controller demo(https://youtu.be/xyt6erl5iEk)
 - Avoid obstacle controller demo(https://youtu.be/bHeEsdVzJBI) 
 - Gotogoal while avoid obstacle controller demo(https://youtu.be/G8c3fivk26k)  
-- Follow wall controller demo(https://youtu.be/IsQj1Lg268I)
+- Follow wall controller demo(https://youtu.be/IsQj1Lg268I) 

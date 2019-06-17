@@ -5,6 +5,7 @@ Navigate_Sim::Navigate_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     ROS_INFO("In class constructor of Navigate_Sim");
     initSub(); // package up the messy work of creating subscribers; do this overhead in constructor
     initPub();
+    setgoalpos();
     setvelocity();
     setpidgains();
     
@@ -43,6 +44,7 @@ void Navigate_Sim::initSub()
     ROS_INFO("Initializing Subscribers");  
     laserpos_sub_ =  nh_.subscribe("/scan", 1, &Navigate_Sim::laserCallback,this);
     currentpos_sub_ = nh_.subscribe("/odom", 1, &Navigate_Sim::currentposCallback,this);
+    stop_sub_ = nh_.subscribe("/odom", 1, &Navigate_Sim::stopCallback,this);
 }
 
 
@@ -66,12 +68,12 @@ void Navigate_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
     int laser_index[5] = {0, 159, 319, 479, 639};
     for (int i=0; i<5; i++)
     {   
-        if (scan.ranges[laser_index[i]] == scan.ranges[laser_index[i]] && scan.ranges[laser_index[i]] > 0.8)
+        if (scan.ranges[laser_index[i]] == scan.ranges[laser_index[i]] && scan.ranges[laser_index[i]] > 0.6)
         {
             laserdis[i] = scan.ranges[laser_index[i]];
         }
 
-        else if (scan.ranges[laser_index[i]] - 1.0 <= 0)
+        else if (scan.ranges[laser_index[i]] - 0.6 <= 0)
         {
             laserdis[i] = scan.range_min;
         }
@@ -79,7 +81,9 @@ void Navigate_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
         {
             laserdis[i] = scan.range_max;
         }
+        cout << "Laser: " << i << ": " << laserdis[i] << " . ";
     }
+    cout << " \n";
     
     for (int i=0; i<5; i++)
     {   
@@ -87,7 +91,7 @@ void Navigate_Sim::laserCallback(const sensor_msgs::LaserScan& scan)
         double y_or = laserdis[i]*sin(laser_angle[i]);
         obstacle_pos[i][0] = currentpos.x + cos(currentpos.theta)*x_or - sin(currentpos.theta)*y_or;
         obstacle_pos[i][1] = currentpos.y + sin(currentpos.theta)*x_or + cos(currentpos.theta)*y_or;
-        cout << i << ": " << obstacle_pos[i][0] << ", " << obstacle_pos[i][1] << endl;
+        // cout << i << ": " << obstacle_pos[i][0] << ", " << obstacle_pos[i][1] << endl;
     }
 }
 
@@ -102,19 +106,20 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         }
     }
 
+    // cout << "aa laser" << min_laserdis << endl;
+
     // get current state of robot u_gtg
-    cout << "Controller!!" << endl;
+    // cout << "Controller!!" << endl;
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;
     currentpos.theta = quatoeuler_yaw(odom);
+    // cout << "goalpos: " << goalpos.x << " " << goalpos.y << endl;
 
     geometry_msgs::Pose2D u_gtg, u_ao;
 
     // Go to goal vector
     u_gtg.x = goalpos.x - currentpos.x;
     u_gtg.y = goalpos.y - currentpos.y;
-    // // angle from robot to goal
-    // double theta_g = atan2(u_y, u_x);
 
     // Avoid obstacle vector u_ao
     for (int i=0; i<5; i++)
@@ -126,10 +131,10 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     // Follow wall clockwise vector u_fw_c
     geometry_msgs::Pose2D u_fw_c, u_fw_c_t, u_fw_c_t1, u_fw_c_t2;
  
-    u_fw_c_t1.x = obstacle_pos[0][0];
-    u_fw_c_t1.y = obstacle_pos[0][1];
-    u_fw_c_t2.x = obstacle_pos[1][0];
-    u_fw_c_t2.y = obstacle_pos[1][1];
+    u_fw_c_t1.x = obstacle_pos[4][0];
+    u_fw_c_t1.y = obstacle_pos[4][1];
+    u_fw_c_t2.x = obstacle_pos[3][0];
+    u_fw_c_t2.y = obstacle_pos[3][1];
     u_fw_c_t.x = u_fw_c_t2.x - u_fw_c_t1.x;
     u_fw_c_t.y = u_fw_c_t2.y - u_fw_c_t1.y;
 
@@ -158,10 +163,10 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
 
     geometry_msgs::Pose2D u_fw_cc, u_fw_cc_t, u_fw_cc_t1, u_fw_cc_t2;
  
-    u_fw_cc_t1.x = obstacle_pos[4][0];
-    u_fw_cc_t1.y = obstacle_pos[4][1];
-    u_fw_cc_t2.x = obstacle_pos[3][0];
-    u_fw_cc_t2.y = obstacle_pos[3][1];
+    u_fw_cc_t1.x = obstacle_pos[0][0];
+    u_fw_cc_t1.y = obstacle_pos[0][1];
+    u_fw_cc_t2.x = obstacle_pos[1][0];
+    u_fw_cc_t2.y = obstacle_pos[1][1];
     u_fw_cc_t.x = u_fw_cc_t2.x - u_fw_cc_t1.x;
     u_fw_cc_t.y = u_fw_cc_t2.y - u_fw_cc_t1.y;
 
@@ -186,9 +191,18 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     u_fw_cc.x = diswall * u_fw_cc_t_norm.x + (u_fw_cc_p.x - diswall * u_fw_cc_p_norm.x);
     u_fw_cc.y = diswall * u_fw_cc_t_norm.y + (u_fw_cc_p.y - diswall * u_fw_cc_p_norm.y);
 
-    geometry_msgs::Pose2D u_nav;
+    // cout << count << endl;
+    // cout << "u_gtg" << u_gtg.x << "  " << u_gtg.y << endl;
+    // cout << "u_ao" << u_ao.x << "  " << u_ao.y << endl;
+    // cout << "u_fw_c" << u_fw_c.x << "  " << u_fw_c.y << endl;
+    // cout << "u_fw_cc" << u_fw_cc.x << "  " << u_fw_cc.y << endl;
 
-    if (min_laserdis < distance_gtg_fw && u_gtg.x * u_ao.x + u_gtg.y * u_ao.y > 0) 
+    // cout << "gtgfw " << distance_gtg_fw << endl;
+    // cout << "check ugtg ao " << u_gtg.x * u_ao.x + u_gtg.y * u_ao.y << endl;
+    // cout << "ufwc " << u_gtg.x * u_fw_c.x + u_gtg.y * u_fw_c.y << endl;
+    // cout << "ufwcc " << u_gtg.x * u_fw_cc.x + u_gtg.y * u_fw_cc.y << endl;
+
+    if (min_laserdis < distance_gtg_fw)// && u_gtg.x * u_ao.x + u_gtg.y * u_ao.y > 0) 
     {
         u_nav = u_gtg;
         state_last = state_current;
@@ -196,7 +210,8 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         count = 0;
     }
 
-    else if (min_laserdis = diswall && u_gtg.x * u_fw_c.x + u_gtg.y * u_fw_c.y > 0) 
+    if (abs(min_laserdis - diswall) <= 0.20 && u_gtg.x * u_fw_c.x + u_gtg.y * u_fw_c.y > 0)// ||\
+         (abs(atan2(u_fw_c.y, u_fw_c.x) - currentpos.theta) < 0.02 && abs(min_laserdis - diswall) <= 0.08)) 
     {   
         if (count == 0) {
             distance_gtg_fw = sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2));
@@ -207,7 +222,8 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         count += 0.00001;
     }
 
-    else if (abs(min_laserdis - diswall) <= 0.05 && u_gtg.x * u_fw_cc.x + u_gtg.y * u_fw_cc.y > 0) 
+    if (abs(min_laserdis - diswall) <= 0.20 && u_gtg.x * u_fw_cc.x + u_gtg.y * u_fw_cc.y > 0)// ||\
+         (abs(atan2(u_fw_cc.y, u_fw_cc.x) - currentpos.theta) < 0.02 && abs(min_laserdis - diswall) <= 0.20)) 
     {
         if (count == 0) {
             distance_gtg_fw = sqrt(pow(u_gtg.x, 2)+pow(u_gtg.y, 2));
@@ -218,14 +234,33 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
         count += 0.00001;
     }
 
-    else if (min_laserdis < distance_safe) 
-    {
+    if (min_laserdis < distance_safe) 
+    {   
         u_nav = u_ao;
         state_last = state_current;
         state_current = "Avoid obstacle"; 
         count = 0;      
     }
 
+    cout << state_current << endl;
+
+    // if (state_current == "Go to goal")
+    // {
+    //     u_nav = u_gtg;
+    // }
+    // else if (state_current == "Avoid obstacle")
+    // {
+    //     u_nav = u_ao;
+    // }
+
+    // else if (state_current == "Follow wall counter-clockwise") 
+    // {
+    //     u_nav = u_fw_cc;
+    // }
+    // else if (state_current == "Follow wall clockwise")
+    // {
+    //     u_nav = u_fw_c;
+    // }
 
     u_nav.theta = atan2(u_nav.y, u_nav.x);
     
@@ -247,31 +282,25 @@ void Navigate_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     // control input 
     w = k_p*e_P + k_i*e_I + k_d*e_D;
 
-    if (min_laserdis < 0.6) {
-        if (w > 1.0)
-        {
-            w = 1.0;
-        }
-        else if (w < -1.0)
-        {
-            w = -1.0;
-        }
-        controlinput.linear.x = v_ao;
-        controlinput.angular.z = w;
+    if (w > 1.0)
+    {
+        w = 1.0;
     }
-    else {
-        
-        if (w > 1.0)
-        {
-            w = 1.0;
-        }
-        else if (w < -1.0)
-        {
-            w = -1.0;
-        }
-        controlinput.angular.z = w;
+    else if (w < -1.0)
+    {
+        w = -1.0;
+    }
+
+    if (min_laserdis < 0.6) 
+    {
+        controlinput.linear.x = v_ao;
+    }
+    else 
+    {
         controlinput.linear.x = v_normal;
     }
+
+    controlinput.angular.z = w;
     controlinput_pub_.publish(controlinput);
 }
 
@@ -280,7 +309,7 @@ void Navigate_Sim::stopCallback(const nav_msgs::Odometry& odom)
     currentpos.x = odom.pose.pose.position.x;
     currentpos.y = odom.pose.pose.position.y;
     double theta = quatoeuler_yaw(odom);
-    cout << "Xc pose: " << currentpos.x << " Xg pose: " << goalpos.x << " Yc pose: " << currentpos.y << " Yg pose: "<< goalpos.y <<endl;
+    // cout << "Xc pose: " << currentpos.x << " Xg pose: " << goalpos.x << " Yc pose: " << currentpos.y << " Yg pose: "<< goalpos.y <<endl;
     if ( ( abs(currentpos.x - goalpos.x)<0.05 ) && ( abs(currentpos.y - goalpos.y)<0.05 ) && (currentpos.x * goalpos.x > 0.01))
     {   
         controlinput.angular.z = 0;

@@ -56,7 +56,7 @@ private:
     double diswall = 0.70;
 
     // safe distance
-    double distance_safe = 0.60;
+    double distance_safe = 0.65;
 
     //progress distance
     double distance_gtg_fw = 10000.0;
@@ -69,7 +69,7 @@ private:
     string state_current = "init";
     string state_last = "init";
 
-    geometry_msgs::Pose2D currentpos, goalpos;
+    geometry_msgs::Pose2D currentpos, goalpos, u_nav;
     geometry_msgs::Twist controlinput;
 
     ros::NodeHandle nh_;
@@ -82,9 +82,9 @@ private:
     void initSub(); 
     void initPub();
 
-    void setgoalpos(double x=-3.0, double y=-3.0);
+    void setgoalpos(double x=-4.0, double y=3.5);
     void setpidgains(double p=3.0, double i=0.0, double d=0.01);
-    void setvelocity(double x=0.3, double y=0.05);
+    void setvelocity(double x=0.3, double y=0.1);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);
     
 

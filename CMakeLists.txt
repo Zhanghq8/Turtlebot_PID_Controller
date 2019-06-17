@@ -224,3 +224,6 @@ target_link_libraries(path_generator ${catkin_LIBRARIES})
 
 add_executable(trajectory_tracking_sim src/trajectory_tracking_sim.cpp)
 target_link_libraries(trajectory_tracking_sim ${catkin_LIBRARIES})
+
+add_executable(navigate_sim src/navigate_sim.cpp)
+target_link_libraries(navigate_sim ${catkin_LIBRARIES})

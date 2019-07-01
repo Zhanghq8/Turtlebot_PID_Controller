@@ -30,7 +30,7 @@ private:
     // control input for linear velocity
     double v_normal;  //velocity for avoiding obstacle
     double v_ao;
-    double w = 0;
+    double w;
 
     // //follow the left or righr wall
     // int direction; // left:1, right: -1
@@ -41,33 +41,33 @@ private:
     double k_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double e_P;
+    double e_I;
+    double e_D;
 
     // accumulated error
-    double E_k = 0;
+    double E_k;
     double e_k;
     // previous error
-    double e_k_previous = 0;
+    double e_k_previous;
 
-    double count = 0.0;
+    double count;
     //distance to the wall 
-    double diswall = 0.70;
+    double diswall;
 
     // safe distance
-    double distance_safe = 0.65;
+    double distance_safe;
 
     //progress distance
-    double distance_gtg_fw = 10000.0;
+    double distance_gtg_fw;
 
     //obstacle pos
     double laserdis[5];
     double obstacle_pos[5][2];
     double lasergain[5] = {1, 1, 1, 1, 1};
 
-    string state_current = "init";
-    string state_last = "init";
+    string state_current;
+    string state_last;
 
     geometry_msgs::Pose2D currentpos, goalpos, u_nav;
     geometry_msgs::Twist controlinput;

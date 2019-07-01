@@ -21,7 +21,7 @@ using namespace std;
 class Follow_Wall_Sim
 {
 public:
-    Follow_Wall_Sim(ros::NodeHandle* nodehandle)   ;
+    Follow_Wall_Sim(ros::NodeHandle* nodehandle);
 
 private:
 	// const double v_max = 2.0;
@@ -30,7 +30,7 @@ private:
     // control input for linear velocity
     double v_normal;  //velocity for avoiding obstacle
     double v_ao;
-    double w = 0;
+    double w;
 
     //follow the left or righr wall
     int direction; // left:1, right: -1
@@ -41,18 +41,18 @@ private:
     double k_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double e_P;
+    double e_I;
+    double e_D;
 
     // accumulated error
-    double E_k = 0;
+    double E_k;
     double e_k;
     // previous error
-    double e_k_previous = 0;
+    double e_k_previous;
 
     //distance to the wall 
-    double diswall = 0.70;
+    double diswall;
 
     //obstacle pos
     double laserdis[5];

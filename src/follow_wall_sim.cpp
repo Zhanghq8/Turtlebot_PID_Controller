@@ -8,7 +8,20 @@ Follow_Wall_Sim::Follow_Wall_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     initPub();
     setvelocity();
     setpidgains();
-    
+
+    w = 0;
+    // error dynamics
+    e_P = 0;
+    e_I = 0;
+    e_D= 0;
+
+    // accumulated error
+    E_k = 0;
+    // previous error
+    e_k_previous = 0;
+
+    //distance to the wall 
+    diswall = 0.70;
 }
 
 void Follow_Wall_Sim::setpidgains(double p, double i, double d)

@@ -9,6 +9,22 @@ GotoGoal_W_Sim::GotoGoal_W_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     setgoalpos();
     setpidgains();
 
+    w = 0;
+
+    // error dynamics
+    e_P = 0;
+    e_I = 0;
+    e_D= 0;
+
+    u_x = 0;
+    u_y = 0;
+
+    u_angle = 0;
+
+    // accumulated error
+    E_k = 0;
+    // previous error
+    e_k_previous = 0;
 }
 
 void GotoGoal_W_Sim::setpidgains(double p, double i, double d)
@@ -69,7 +85,7 @@ void GotoGoal_W_Sim::currentposCallback(const nav_msgs::Odometry& odom)
     // error between the goal angle and robot's angle
     u_angle = theta_g - currentpos.theta;
 
-    cout << "theta_g: " << theta_g << " theta: " << currentpos.theta << endl;
+    // cout << "theta_g: " << theta_g << " theta: " << currentpos.theta << endl;
 
     e_k = atan2(sin(u_angle),cos(u_angle));
 

@@ -29,7 +29,7 @@ private:
 
     // control input for linear velocity
     double v;
-    double w = 0;
+    double w;
     double theta_d;
 
     // pid gain parameters
@@ -38,20 +38,20 @@ private:
     double k_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double e_P;
+    double e_I;
+    double e_D;
 
-    double u_x = 0;
-    double u_y = 0;
+    double u_x;
+    double u_y;
 
-    double u_angle = 0;
+    double u_angle;
 
     // accumulated error
-    double E_k = 0;
+    double E_k;
     double e_k;
     // previous error
-    double e_k_previous = 0;
+    double e_k_previous;
 
     geometry_msgs::Pose2D currentpos, goalpos;
     geometry_msgs::Twist controlinput;
@@ -63,7 +63,7 @@ private:
 
     void initSub(); 
     void initPub();
-    void setgoalpos(double x=-3);
+    void setgoalpos(double x=-1);
     void setpidgains(double p=3.0, double i=0, double d=1.0);
     void setvelocity(double x=0.5);
     double quatoeuler_yaw(const nav_msgs::Odometry& odom);

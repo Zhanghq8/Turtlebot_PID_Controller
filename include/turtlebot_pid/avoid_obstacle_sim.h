@@ -31,8 +31,8 @@ private:
     // control input for linear velocity
     double v_normal;
     double v_ao;
-    double w = 0;
-    // double theta_d = 0.5;
+    double w;
+    // double theta_d.5;
 
     // pid gain parameters
     double k_p;
@@ -40,20 +40,20 @@ private:
     double k_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double e_P;
+    double e_I;
+    double e_D;
 
-    double u_x = 0;
-    double u_y = 0;
+    double u_x;
+    double u_y;
 
-    double u_angle = 0;
+    double u_angle;
 
     // accumulated error
-    double E_k = 0;
+    double E_k;
     double e_k;
     // previous error
-    double e_k_previous = 0;
+    double e_k_previous;
 
     //obstacle pos
     double laserdis[5];

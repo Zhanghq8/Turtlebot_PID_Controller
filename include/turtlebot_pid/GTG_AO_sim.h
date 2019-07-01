@@ -31,7 +31,7 @@ private:
     // control input for linear velocity
     double v_normal;  //velocity for avoiding obstacle
     double v_ao;
-    double w = 0;
+    double w;
 
     // pid gain parameters
     double k_p;
@@ -39,18 +39,18 @@ private:
     double k_i;
 
     // error dynamics
-    double e_P = 0;
-    double e_I = 0;
-    double e_D= 0;
+    double e_P;
+    double e_I;
+    double e_D;
 
     // accumulated error
-    double E_k = 0;
+    double E_k;
     double e_k;
     // previous error
-    double e_k_previous = 0;
+    double e_k_previous;
 
     //blending parameter
-    double alpha = 0.90;
+    double alpha;
 
     //obstacle pos
     double laserdis[5];

@@ -9,6 +9,19 @@ GTG_AO_Sim::GTG_AO_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     setvelocity();
     setpidgains();
 
+    w = 0;
+    // error dynamics
+    e_P = 0;
+    e_I = 0;
+    e_D= 0;
+
+    // accumulated error
+    E_k = 0;
+    // previous error
+    e_k_previous = 0;
+
+    //blending parameter
+    alpha = 0.90;
 }
 
 void GTG_AO_Sim::setpidgains(double p, double i, double d)

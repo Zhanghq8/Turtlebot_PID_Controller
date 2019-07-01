@@ -8,6 +8,32 @@ Navigate_Sim::Navigate_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     setgoalpos();
     setvelocity();
     setpidgains();
+
+    w = 0;
+
+    // error dynamics
+    e_P = 0;
+    e_I = 0;
+    e_D= 0;
+
+    // accumulated error
+    E_k = 0;
+    // previous error
+    e_k_previous = 0;
+
+    count = 0.0;
+    //distance to the wall 
+    diswall = 0.70;
+
+    // safe distance
+    distance_safe = 0.65;
+
+    //progress distance
+    distance_gtg_fw = 10000.0;
+
+    //obstacle pos
+    state_current = "init";
+    state_last = "init";
     
 }
 

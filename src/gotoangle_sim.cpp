@@ -10,6 +10,22 @@ GotoAngle_Sim::GotoAngle_Sim(ros::NodeHandle* nodehandle):nh_(*nodehandle)
     setgoalpos();
     setpidgains();
 
+    w = 0;
+    // error dynamics
+    e_P = 0;
+    e_I = 0;
+    e_D= 0;
+
+    u_x = 0;
+    u_y = 0;
+
+    u_angle = 0;
+
+    // accumulated error
+    E_k = 0;
+    // previous error
+    e_k_previous = 0;
+
 }
 
 void GotoAngle_Sim::setpidgains(double p, double i, double d)
